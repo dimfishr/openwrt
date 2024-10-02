@@ -90,7 +90,7 @@ set ${s}.channel='${channel}'
 set ${s}.htmode='${htmode}'
 set ${s}.country='${country || ''}'
 set ${s}.num_global_macaddr='${num_global_macaddr || ''}'
-set ${s}.disabled='${defaults ? 0 : 1}'
+set ${s}.disabled='0'
 
 set ${si}=wifi-iface
 set ${si}.device='${name}'
