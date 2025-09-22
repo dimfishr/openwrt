@@ -61,9 +61,9 @@ Signed-off-by: Nagarajan Maran <quic_nmaran@quicinc.com>
  	while (likely(desc =
  	      (struct hal_reo_dest_ring *)ath11k_hal_srng_dst_get_next_entry(ab,
  									     srng))) {
-+
++		info0 = READ_ONCE(desc->info0);
 +		push_reason = FIELD_GET(HAL_REO_DEST_RING_INFO0_PUSH_REASON,
-+					desc->info0);
++					info0);
 +		if (unlikely(push_reason ==
 +		    HAL_REO_DEST_RING_PUSH_REASON_ERR_DETECTED)) {
 +			ath11k_warn(ab,"Received invalid desc\n");
@@ -72,14 +72,15 @@ Signed-off-by: Nagarajan Maran <quic_nmaran@quicinc.com>
 +		}
 +
  		cookie = FIELD_GET(BUFFER_ADDR_INFO1_SW_COOKIE,
- 				   desc->buf_addr_info.info1);
+ 				   READ_ONCE(desc->buf_addr_info.info1));
  		buf_id = FIELD_GET(DP_RXDMA_BUF_COOKIE_BUF_ID,
-@@ -3162,8 +3172,6 @@ try_again:
+@@ -3162,9 +3172,6 @@ try_again:
  
  		num_buffs_reaped[mac_id]++;
  
+-		info0 = READ_ONCE(desc->info0);
 -		push_reason = FIELD_GET(HAL_REO_DEST_RING_INFO0_PUSH_REASON,
--					desc->info0);
+-					info0);
  		if (unlikely(push_reason !=
  			     HAL_REO_DEST_RING_PUSH_REASON_ROUTING_INSTRUCTION)) {
  			dev_kfree_skb_any(msdu);

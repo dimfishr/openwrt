@@ -1,0 +1,18 @@
+--- a/drivers/net/wireless/ath/ath11k/core.c
++++ b/drivers/net/wireless/ath/ath11k/core.c
+@@ -305,6 +305,7 @@ static struct ath11k_hw_params ath11k_hw
+ 		.tx_ring_size = DP_TCL_DATA_RING_SIZE,
+ 		.smp2p_wow_exit = false,
+ 		.support_fw_mac_sequence = true,
++		.num_vdevs_peers = ath11k_vdevs_peers,
+ 		.support_dual_stations = true,
+ 	},
+ 	{
+@@ -649,6 +650,7 @@ static struct ath11k_hw_params ath11k_hw
+ 		.tx_ring_size = DP_TCL_DATA_RING_SIZE_WCN6750,
+ 		.smp2p_wow_exit = true,
+ 		.support_fw_mac_sequence = true,
++		.num_vdevs_peers = ath11k_vdevs_peers,
+ 		.support_dual_stations = false,
+ 	},
+ 	{
