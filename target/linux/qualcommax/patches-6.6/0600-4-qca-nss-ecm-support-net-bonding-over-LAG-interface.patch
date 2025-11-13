@@ -259,7 +259,7 @@
  	int link_reporting;
  	int res = 0, i;
  
-@@ -2337,6 +2370,15 @@ skip_mac_set:
+@@ -2338,6 +2371,15 @@ skip_mac_set:
  		   bond_is_active_slave(new_slave) ? "an active" : "a backup",
  		   new_slave->link != BOND_LINK_DOWN ? "an up" : "a down");
  
@@ -275,7 +275,7 @@
  	/* enslave is successful */
  	bond_queue_slave_event(new_slave);
  	return 0;
-@@ -2402,6 +2444,15 @@ err_undo_flags:
+@@ -2403,6 +2445,15 @@ err_undo_flags:
  		}
  	}
  
@@ -291,7 +291,7 @@
  	return res;
  }
  
-@@ -2423,6 +2474,7 @@ static int __bond_release_one(struct net
+@@ -2424,6 +2475,7 @@ static int __bond_release_one(struct net
  	struct bonding *bond = netdev_priv(bond_dev);
  	struct slave *slave, *oldcurrent;
  	struct sockaddr_storage ss;
@@ -299,7 +299,7 @@
  	int old_flags = bond_dev->flags;
  	netdev_features_t old_features = bond_dev->features;
  
-@@ -2445,6 +2497,15 @@ static int __bond_release_one(struct net
+@@ -2446,6 +2498,15 @@ static int __bond_release_one(struct net
  
  	bond_set_slave_inactive_flags(slave, BOND_SLAVE_NOTIFY_NOW);
  
@@ -315,7 +315,7 @@
  	bond_sysfs_slave_del(slave);
  
  	/* recompute stats just before removing the slave */
-@@ -2773,6 +2834,8 @@ static void bond_miimon_commit(struct bo
+@@ -2774,6 +2835,8 @@ static void bond_miimon_commit(struct bo
  	struct slave *slave, *primary, *active;
  	bool do_failover = false;
  	struct list_head *iter;
@@ -324,7 +324,7 @@
  
  	ASSERT_RTNL();
  
-@@ -2812,6 +2875,12 @@ static void bond_miimon_commit(struct bo
+@@ -2813,6 +2876,12 @@ static void bond_miimon_commit(struct bo
  				bond_set_active_slave(slave);
  			}
  
@@ -337,7 +337,7 @@
  			slave_info(bond->dev, slave->dev, "link status definitely up, %u Mbps %s duplex\n",
  				   slave->speed == SPEED_UNKNOWN ? 0 : slave->speed,
  				   slave->duplex ? "full" : "half");
-@@ -2860,6 +2929,16 @@ static void bond_miimon_commit(struct bo
+@@ -2861,6 +2930,16 @@ static void bond_miimon_commit(struct bo
  		unblock_netpoll_tx();
  	}
  
