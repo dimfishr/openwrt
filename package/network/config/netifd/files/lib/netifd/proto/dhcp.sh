@@ -65,8 +65,7 @@ proto_dhcp_setup() {
 	[ "$defaultreqopts" = 0 ] && defaultreqopts="-o" || defaultreqopts=
 	[ "$broadcast" = 1 ] && broadcast="-B" || broadcast=
 	[ "$norelease" = 1 ] && norelease="" || norelease="-R"
-	[ -z "$clientid" ] && clientid="$(proto_dhcp_get_default_clientid "$iface")"
-	[ -n "$clientid" ] && clientid="-x 0x3d:${clientid//:/}"
+	[ -n "$clientid" ] && clientid="-x 0x3d:${clientid//:/}" || clientid="-C"
 	[ -n "$vendorid" ] && append dhcpopts "-x 0x3c:$(echo -n "$vendorid" | hexdump -ve '1/1 "%02x"')"
 	[ -n "$iface6rd" ] && proto_export "IFACE6RD=$iface6rd"
 	[ "$iface6rd" != 0 -a -f /lib/netifd/proto/6rd.sh ] && append dhcpopts "-O 212"
