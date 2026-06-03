@@ -81,7 +81,7 @@
  		     __be16 vlan_proto, u16 vlan_id)
 --- a/include/linux/netdevice.h
 +++ b/include/linux/netdevice.h
-@@ -613,6 +613,36 @@ enum netdev_queue_state_t {
+@@ -615,6 +615,36 @@ enum netdev_queue_state_t {
  	__QUEUE_STATE_FROZEN,
  };
  
@@ -118,7 +118,7 @@
  #define QUEUE_STATE_DRV_XOFF	(1 << __QUEUE_STATE_DRV_XOFF)
  #define QUEUE_STATE_STACK_XOFF	(1 << __QUEUE_STATE_STACK_XOFF)
  #define QUEUE_STATE_FROZEN	(1 << __QUEUE_STATE_FROZEN)
-@@ -2026,6 +2056,7 @@ struct net_device {
+@@ -2030,6 +2060,7 @@ struct net_device {
  		unsigned long		priv_flags:32;
  		unsigned long		lltx:1;
  	);
@@ -126,7 +126,7 @@
  	const struct net_device_ops *netdev_ops;
  	const struct header_ops *header_ops;
  	struct netdev_queue	*_tx;
-@@ -2907,6 +2938,10 @@ enum netdev_cmd {
+@@ -2912,6 +2943,10 @@ enum netdev_cmd {
  	NETDEV_OFFLOAD_XSTATS_REPORT_USED,
  	NETDEV_OFFLOAD_XSTATS_REPORT_DELTA,
  	NETDEV_XDP_FEAT_CHANGE,
@@ -304,7 +304,7 @@
  	skb = nlmsg_new(fdb_nlmsg_size(), GFP_ATOMIC);
  	if (skb == NULL)
  		goto errout;
-@@ -537,6 +570,22 @@ out:
+@@ -541,6 +574,22 @@ out:
  	spin_unlock_bh(&br->hash_lock);
  }
  
@@ -327,7 +327,7 @@
  void br_fdb_cleanup(struct work_struct *work)
  {
  	struct net_bridge *br = container_of(work, struct net_bridge,
-@@ -545,6 +594,7 @@ void br_fdb_cleanup(struct work_struct *
+@@ -549,6 +598,7 @@ void br_fdb_cleanup(struct work_struct *
  	unsigned long delay = hold_time(br);
  	unsigned long work_delay = delay;
  	unsigned long now = jiffies;
@@ -335,7 +335,7 @@
  
  	/* this part is tricky, in order to avoid blocking learning and
  	 * consequently forwarding, we rely on rcu to delete objects with
-@@ -571,8 +621,15 @@ void br_fdb_cleanup(struct work_struct *
+@@ -575,8 +625,15 @@ void br_fdb_cleanup(struct work_struct *
  			work_delay = min(work_delay, this_timer - now);
  		} else {
  			spin_lock_bh(&br->hash_lock);
@@ -352,7 +352,7 @@
  			spin_unlock_bh(&br->hash_lock);
  		}
  	}
-@@ -932,6 +989,12 @@ void br_fdb_update(struct net_bridge *br
+@@ -938,6 +995,12 @@ void br_fdb_update(struct net_bridge *br
  				 */
  				if (unlikely(test_bit(BR_FDB_LOCKED, &fdb->flags)))
  					clear_bit(BR_FDB_LOCKED, &fdb->flags);
@@ -365,7 +365,7 @@
  			}
  
  			if (unlikely(test_bit(BR_FDB_ADDED_BY_USER, &flags))) {
-@@ -959,6 +1022,64 @@ void br_fdb_update(struct net_bridge *br
+@@ -965,6 +1028,64 @@ void br_fdb_update(struct net_bridge *br
  	}
  }
  
@@ -656,7 +656,7 @@
  
  out_remove_new_fa:
 @@ -1754,6 +1760,9 @@ int fib_table_delete(struct net *net, st
- 	if (fa_to_delete->fa_state & FA_S_ACCESSED)
+ 	if (READ_ONCE(fa_to_delete->fa_state) & FA_S_ACCESSED)
  		rt_cache_flush(cfg->fc_nlinfo.nl_net);
  
 +	blocking_notifier_call_chain(&iproute_chain,
@@ -708,7 +708,7 @@
  static inline const void *choose_neigh_daddr(const struct in6_addr *p,
  					     struct sk_buff *skb,
  					     const void *daddr)
-@@ -3928,6 +3931,10 @@ int ip6_route_add(struct fib6_config *cf
+@@ -3927,6 +3930,10 @@ int ip6_route_add(struct fib6_config *cf
  		return PTR_ERR(rt);
  
  	err = __ip6_ins_rt(rt, &cfg->fc_nlinfo, extack);
@@ -719,7 +719,7 @@
  	fib6_info_release(rt);
  
  	return err;
-@@ -3949,6 +3956,9 @@ static int __ip6_del_rt(struct fib6_info
+@@ -3948,6 +3955,9 @@ static int __ip6_del_rt(struct fib6_info
  	err = fib6_del(rt, info);
  	spin_unlock_bh(&table->tb6_lock);
  
@@ -729,7 +729,7 @@
  out:
  	fib6_info_release(rt);
  	return err;
-@@ -6424,6 +6434,20 @@ static int ip6_route_dev_notify(struct n
+@@ -6423,6 +6433,20 @@ static int ip6_route_dev_notify(struct n
  	return NOTIFY_OK;
  }
  
@@ -760,7 +760,7 @@
  	}
  #undef N
  	return "UNKNOWN_NETDEV_EVENT";
-@@ -12078,7 +12079,7 @@ static void __init net_dev_struct_check(
+@@ -12199,7 +12200,7 @@ static void __init net_dev_struct_check(
  #ifdef CONFIG_NET_XGRESS
  	CACHELINE_ASSERT_GROUP_MEMBER(struct net_device, net_device_read_tx, tcx_egress);
  #endif
@@ -884,7 +884,7 @@
  		 timeouts[new_state] > timeouts[TCP_CONNTRACK_RETRANS])
  		timeout = timeouts[TCP_CONNTRACK_RETRANS];
  	else
-@@ -1602,6 +1606,9 @@ void nf_conntrack_tcp_init_net(struct ne
+@@ -1598,6 +1602,9 @@ void nf_conntrack_tcp_init_net(struct ne
  	 */
  	tn->tcp_be_liberal = 0;
  
@@ -947,7 +947,7 @@
  	__gre_xmit(skb, dev, &tunnel->parms.iph, htons(ETH_P_TEB));
  	return NETDEV_TX_OK;
  
-@@ -1381,6 +1385,7 @@ static void ipgre_tap_setup(struct net_d
+@@ -1382,6 +1386,7 @@ static void ipgre_tap_setup(struct net_d
  	dev->netdev_ops	= &gre_tap_netdev_ops;
  	dev->priv_flags &= ~IFF_TX_SKB_SHARING;
  	dev->priv_flags	|= IFF_LIVE_ADDR_CHANGE;
