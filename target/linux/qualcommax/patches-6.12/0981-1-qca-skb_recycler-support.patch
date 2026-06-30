@@ -10,7 +10,7 @@
  	CPUHP_AP_ARM_CACHE_B15_RAC_DEAD,
 --- a/include/linux/skbuff.h
 +++ b/include/linux/skbuff.h
-@@ -989,6 +989,20 @@ struct sk_buff {
+@@ -990,6 +990,20 @@ struct sk_buff {
  #ifdef CONFIG_IPV6_NDISC_NODETYPE
  	__u8			ndisc_nodetype:2;
  #endif
@@ -31,7 +31,7 @@
  
  #if IS_ENABLED(CONFIG_IP_VS)
  	__u8			ipvs_property:1;
-@@ -1085,6 +1099,10 @@ struct sk_buff {
+@@ -1087,6 +1101,10 @@ struct sk_buff {
  	/* only usable after checking ->active_extensions != 0 */
  	struct skb_ext		*extensions;
  #endif
@@ -42,7 +42,7 @@
  };
  
  /* if you move pkt_type around you also must adapt those constants */
-@@ -1318,7 +1336,7 @@ static inline void kfree_skb_list(struct
+@@ -1320,7 +1338,7 @@ static inline void kfree_skb_list(struct
  	kfree_skb_list_reason(segs, SKB_DROP_REASON_NOT_SPECIFIED);
  }
  
@@ -51,7 +51,7 @@
  void consume_skb(struct sk_buff *skb);
  #else
  static inline void consume_skb(struct sk_buff *skb)
-@@ -1327,8 +1345,12 @@ static inline void consume_skb(struct sk
+@@ -1329,8 +1347,12 @@ static inline void consume_skb(struct sk
  }
  #endif
  
@@ -64,7 +64,7 @@
  
  void kfree_skb_partial(struct sk_buff *skb, bool head_stolen);
  bool skb_try_coalesce(struct sk_buff *to, struct sk_buff *from,
-@@ -1451,6 +1473,7 @@ static inline int skb_pad(struct sk_buff
+@@ -1453,6 +1475,7 @@ static inline int skb_pad(struct sk_buff
  	return __skb_pad(skb, pad, true);
  }
  #define dev_kfree_skb(a)	consume_skb(a)
@@ -72,7 +72,7 @@
  
  int skb_append_pagefrags(struct sk_buff *skb, struct page *page,
  			 int offset, size_t size, size_t max_frags);
-@@ -3414,6 +3437,9 @@ static inline void *netdev_alloc_frag_al
+@@ -3416,6 +3439,9 @@ static inline void *netdev_alloc_frag_al
  struct sk_buff *__netdev_alloc_skb(struct net_device *dev, unsigned int length,
  				   gfp_t gfp_mask);
  
@@ -146,7 +146,7 @@
 +obj-$(CONFIG_SKB_RECYCLER) += skbuff_recycle.o
 --- a/net/core/dev.c
 +++ b/net/core/dev.c
-@@ -6241,12 +6241,18 @@ static int process_backlog(struct napi_s
+@@ -6242,12 +6242,18 @@ static int process_backlog(struct napi_s
  
  	napi->weight = READ_ONCE(net_hotdata.dev_rx_weight);
  	while (again) {
@@ -636,7 +636,7 @@
  	return 0;
  
  nofrags:
-@@ -5116,6 +5335,17 @@ static void skb_extensions_init(void) {}
+@@ -5139,6 +5358,17 @@ static void skb_extensions_init(void) {}
  
  void __init skb_init(void)
  {
@@ -654,7 +654,7 @@
  	net_hotdata.skbuff_cache = kmem_cache_create_usercopy("skbuff_head_cache",
  					      sizeof(struct sk_buff),
  					      0,
-@@ -5141,6 +5371,7 @@ void __init skb_init(void)
+@@ -5164,6 +5394,7 @@ void __init skb_init(void)
  						SKB_SMALL_HEAD_HEADROOM,
  						NULL);
  	skb_extensions_init();
@@ -662,7 +662,7 @@
  }
  
  static int
-@@ -6674,6 +6905,7 @@ static int pskb_carve_inside_header(stru
+@@ -6697,6 +6928,7 @@ static int pskb_carve_inside_header(stru
  	if (skb_pfmemalloc(skb))
  		gfp_mask |= __GFP_MEMALLOC;
  
@@ -670,7 +670,7 @@
  	data = kmalloc_reserve(&size, gfp_mask, NUMA_NO_NODE, NULL);
  	if (!data)
  		return -ENOMEM;
-@@ -6697,7 +6929,7 @@ static int pskb_carve_inside_header(stru
+@@ -6727,7 +6959,7 @@ static int pskb_carve_inside_header(stru
  			skb_frag_ref(skb, i);
  		if (skb_has_frag_list(skb))
  			skb_clone_fraglist(skb);
@@ -679,7 +679,7 @@
  	} else {
  		/* we can reuse existing recount- all we did was
  		 * relocate values
-@@ -6790,6 +7022,7 @@ static int pskb_carve_inside_nonlinear(s
+@@ -6820,6 +7052,7 @@ static int pskb_carve_inside_nonlinear(s
  	if (skb_pfmemalloc(skb))
  		gfp_mask |= __GFP_MEMALLOC;
  
@@ -687,10 +687,10 @@
  	data = kmalloc_reserve(&size, gfp_mask, NUMA_NO_NODE, NULL);
  	if (!data)
  		return -ENOMEM;
-@@ -6837,7 +7070,7 @@ static int pskb_carve_inside_nonlinear(s
- 		skb_kfree_head(data, size);
- 		return -ENOMEM;
+@@ -6874,7 +7107,7 @@ static int pskb_carve_inside_nonlinear(s
  	}
+ 	if (skb_zcopy(skb))
+ 		net_zcopy_get(skb_zcopy(skb));
 -	skb_release_data(skb, SKB_CONSUMED);
 +	skb_release_data(skb, SKB_CONSUMED, false);
  
