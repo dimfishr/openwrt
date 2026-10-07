@@ -1,5 +1,5 @@
 #
-# Copyright (C) 2013-2025 OpenWrt.org
+# Copyright (C) 2013-2015 OpenWrt.org
 #
 # This is free software, licensed under the GNU General Public License v2.
 # See /LICENSE for more information.
@@ -8,17 +8,18 @@
 include $(TOPDIR)/rules.mk
 
 PKG_NAME:=odhcpd
-PKG_RELEASE:=1
+PKG_RELEASE:=3
 
 PKG_SOURCE_PROTO:=git
 PKG_SOURCE_URL=$(PROJECT_GIT)/project/odhcpd.git
-PKG_MIRROR_HASH:=b9bd30d14f79e34b9f3511a511ef1cd1c4541568448e91fd02ae9173f12a0b64
-PKG_SOURCE_DATE:=2026-06-29
-PKG_SOURCE_VERSION:=5d7be43f8b9dec0eb47e245cfab81108bb131273
+PKG_MIRROR_HASH:=1ad44323f7803fdb5d1b2492d47e4b4b0fbc3d4c7c171b270422b10535c2a284
+PKG_SOURCE_DATE:=2025-10-02
+PKG_SOURCE_VERSION:=b14cf98c914d8582f18c7b263814797366fa185d
 
-PKG_MAINTAINER:=Álvaro Fernández Rojas <noltari@gmail.com>
+PKG_MAINTAINER:=Hans Dedecker <dedeckeh@gmail.com>
 PKG_LICENSE:=GPL-2.0
 
+PKG_CONFIG_DEPENDS:=CONFIG_PACKAGE_odhcpd_$(BUILD_VARIANT)_ext_cer_id
 PKG_ASLR_PIE_REGULAR:=1
 
 include $(INCLUDE_DIR)/package.mk
@@ -27,6 +28,7 @@ include $(INCLUDE_DIR)/cmake.mk
 define Package/odhcpd/default
   SECTION:=net
   CATEGORY:=Network
+  TITLE:=OpenWrt DHCPv6(-PD)/RA Server & Relay
   DEPENDS:=+libjson-c +libubox +libuci +libubus +libnl-tiny
 endef
 
@@ -36,39 +38,58 @@ define Package/odhcpd/default/description
  requirements for IPv6 home routers.
 endef
 
+define Package/odhcpd/default/config
+menu "Configuration"
+	depends on PACKAGE_$(1)
+
+config PACKAGE_odhcpd_$(2)_ext_cer_id
+	int
+	default 0
+	prompt "CER-ID Extension ID (0 = disabled)"
+endmenu
+endef
+
 define Package/odhcpd
-  $(Package/odhcpd/default)
-  TITLE:=OpenWrt DHCPv4/DHCPv6/NDP/RA server
+  $(call Package/odhcpd/default)
+  TITLE += and DHCPv4 server
   VARIANT:=full
 endef
 
-define Package/odhcpd/description
- $(Package/odhcpd/default/description)
+Package/odhcpd/config=$(call Package/odhcpd/default/config,odhcpd,full)
 
- This is a variant with support for RA, DHCPv4 and DHCPv6. It can also be used
- to relay RA, DHCPv6 and NDP messages between routed (non-bridged) interfaces
- in case no delegated prefixes are available.
+define Package/odhcpd/description
+ $(call Package/odhcpd/default/description)
+
+ This is a variant providing server services for DHCPv4, RA, stateless and
+ stateful DHCPv6,  prefix delegation and can be used to relay RA, DHCPv6 and
+ NDP between routed (non-bridged) interfaces in case no delegated prefixes
+ are available.
 endef
 
 define Package/odhcpd-ipv6only
-  $(Package/odhcpd/default)
-  TITLE:=OpenWrt DHCPv6/NDP/RA server (without DHCPv4)
+  $(call Package/odhcpd/default)
   VARIANT:=ipv6only
-  DEPENDS+=@IPV6
+  DEPENDS+= @IPV6
 endef
 
-define Package/odhcpd-ipv6only/description
- $(Package/odhcpd/default/description)
+Package/odhcpd-ipv6only/config=$(call Package/odhcpd/default/config,odhcpd-ipv6only,ipv6only)
 
- This is a variant with support for RA and DHCPv6. It can also be used to
- relay RA, DHCPv6 and NDP messages between routed (non-bridged) interfaces
- in case no delegated prefixes are available.
+define Package/odhcpd-ipv6only/description
+ $(call Package/odhcpd/default/description)
+
+ This is a variant providing server services for RA, stateless and stateful
+ DHCPv6,  prefix delegation and can be used to relay RA, DHCPv6 and NDP between
+ routed (non-bridged) interfaces in case no delegated prefixes are available.
 endef
 
 CMAKE_OPTIONS += -DUBUS=1
 
 ifeq ($(BUILD_VARIANT),full)
   CMAKE_OPTIONS += -DDHCPV4_SUPPORT=1
+endif
+
+ifneq ($(CONFIG_PACKAGE_odhcpd_$(BUILD_VARIANT)_ext_cer_id),0)
+  CMAKE_OPTIONS += -DEXT_CER_ID=$(CONFIG_PACKAGE_odhcpd_$(BUILD_VARIANT)_ext_cer_id)
 endif
 
 define Package/odhcpd/install
