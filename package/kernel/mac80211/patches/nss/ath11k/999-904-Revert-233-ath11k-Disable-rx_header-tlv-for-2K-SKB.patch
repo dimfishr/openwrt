@@ -381,7 +381,7 @@
  	hdr = (struct ieee80211_hdr *)first_hdr;
  	hdr_len = ieee80211_hdrlen(hdr->frame_control);
  
-@@ -3300,20 +3179,6 @@ static int ath11k_dp_rx_process_msdu(str
+@@ -3322,20 +3201,6 @@ static int ath11k_dp_rx_process_msdu(str
  		goto free_out;
  	}
  
@@ -402,7 +402,7 @@
  	rxcb = ATH11K_SKB_RXCB(msdu);
  	rxcb->rx_desc = rx_desc;
  	msdu_len = ath11k_dp_rx_h_msdu_start_msdu_len(ab, rx_desc);
-@@ -3326,9 +3191,8 @@ static int ath11k_dp_rx_process_msdu(str
+@@ -3348,9 +3213,8 @@ static int ath11k_dp_rx_process_msdu(str
  			hdr_status = ath11k_dp_rx_h_80211_hdr(ab, rx_desc);
  			ret = -EINVAL;
  			ath11k_warn(ab, "invalid msdu len %u\n", msdu_len);
@@ -414,7 +414,7 @@
  			ath11k_dbg_dump(ab, ATH11K_DBG_DATA, NULL, "", rx_desc,
  					sizeof(struct hal_rx_desc));
  			goto free_out;
-@@ -4572,8 +4436,8 @@ static void ath11k_dp_rx_h_sort_frags(st
+@@ -4605,8 +4469,8 @@ static void ath11k_dp_rx_h_sort_frags(st
  
  static u64 ath11k_dp_rx_h_get_pn(struct ath11k *ar, struct sk_buff *skb)
  {
@@ -424,7 +424,7 @@
  	u8 *ehdr;
  	u32 hal_rx_desc_sz = ar->ab->hw_params.hal_desc_sz;
  
-@@ -4800,9 +4664,8 @@ ath11k_dp_process_rx_err_buf(struct ath1
+@@ -4833,9 +4697,8 @@ ath11k_dp_process_rx_err_buf(struct ath1
  	if ((msdu_len + hal_rx_desc_sz) > DP_RX_BUFFER_SIZE) {
  		hdr_status = ath11k_dp_rx_h_80211_hdr(ar->ab, rx_desc);
  		ath11k_warn(ar->ab, "invalid msdu leng %u", msdu_len);
@@ -436,7 +436,7 @@
  		ath11k_dbg_dump(ar->ab, ATH11K_DBG_DATA, NULL, "", rx_desc,
  				sizeof(struct hal_rx_desc));
  		dev_kfree_skb_any(msdu);
-@@ -5435,47 +5298,6 @@ void ath11k_dp_rx_pdev_free(struct ath11
+@@ -5478,47 +5341,6 @@ void ath11k_dp_rx_pdev_free(struct ath11
  	ath11k_dp_rxdma_pdev_buf_free(ar);
  }
  
@@ -484,7 +484,7 @@
  int ath11k_dp_rx_pdev_alloc(struct ath11k_base *ab, int mac_id)
  {
  	struct ath11k *ar = ab->pdevs[mac_id].ar;
-@@ -5569,12 +5391,6 @@ config_refill_ring:
+@@ -5612,12 +5434,6 @@ config_refill_ring:
  		}
  	}
  
@@ -931,7 +931,7 @@
  extern const struct ath11k_hw_ops ipq8074_ops;
 --- a/drivers/net/wireless/ath/ath11k/mac.c
 +++ b/drivers/net/wireless/ath/ath11k/mac.c
-@@ -6668,7 +6668,6 @@ static int ath11k_mac_config_mon_status_
+@@ -6691,7 +6691,6 @@ static int ath11k_mac_config_mon_status_
  			tlv_filter.rx_filter = ath11k_debugfs_rx_filter(ar);
  	}
  

@@ -455,7 +455,7 @@
  		break;
  	case HTT_T2H_MSG_TYPE_PPDU_STATS_IND:
  		ath11k_htt_pull_ppdu_stats(ab, skb);
-@@ -2866,25 +2882,25 @@ static void ath11k_dp_rx_h_undecap(struc
+@@ -2866,24 +2882,24 @@ static void ath11k_dp_rx_h_undecap(struc
  }
  
  static struct ath11k_peer *
@@ -469,9 +469,8 @@
 -	lockdep_assert_held(&ab->base_lock);
 +	lockdep_assert_held(&ar->ab->base_lock);
  
- 	if (rxcb->peer_id)
--		peer = ath11k_peer_find_by_id(ab, rxcb->peer_id);
-+		peer = ath11k_peer_find_by_id(ar, rxcb->peer_id);
+-	peer = ath11k_peer_find_by_id(ab, rxcb->peer_id);
++	peer = ath11k_peer_find_by_id(ar, rxcb->peer_id);
  
  	if (peer)
  		return peer;
@@ -487,7 +486,7 @@
  	return peer;
  }
  
-@@ -2928,7 +2944,7 @@ static bool ath11k_dp_rx_check_fast_rx(s
+@@ -2927,7 +2943,7 @@ static bool ath11k_dp_rx_check_fast_rx(s
  		return false;
  
  	/* check if the msdu needs to be bridged to our connected peer */
@@ -496,7 +495,7 @@
  
  	if (f_peer && f_peer != peer)
  		return false;
-@@ -2967,7 +2983,7 @@ static void ath11k_dp_rx_h_mpdu(struct a
+@@ -2966,7 +2982,7 @@ static void ath11k_dp_rx_h_mpdu(struct a
  	}
  
  	spin_lock_bh(&ar->ab->base_lock);
@@ -505,7 +504,7 @@
  	if (peer) {
  		/* If the pkt is a valid IP packet and peer supports
  		 * fast rx, deliver directly to net, also note that
-@@ -3195,7 +3211,7 @@ static void ath11k_dp_rx_deliver_msdu(st
+@@ -3194,7 +3210,7 @@ static void ath11k_dp_rx_deliver_msdu(st
  		decap = ath11k_dp_rx_h_msdu_start_decap_type(ar->ab, rxcb->rx_desc);
  
  	spin_lock_bh(&ar->ab->base_lock);
@@ -514,7 +513,7 @@
  	if (peer && peer->sta)
  		pubsta = peer->sta;
  	spin_unlock_bh(&ar->ab->base_lock);
-@@ -3718,7 +3734,7 @@ static void ath11k_dp_rx_update_user_sta
+@@ -3745,7 +3761,7 @@ static void ath11k_dp_rx_update_user_sta
  	if (user_stats->ast_index == 0 || user_stats->ast_index == 0xFFFF)
  		return;
  
@@ -523,7 +522,7 @@
  
  	if (peer == NULL) {
  		if (!ar->ab->nss.enabled)
-@@ -4193,7 +4209,7 @@ int ath11k_peer_rx_frag_setup(struct ath
+@@ -4220,7 +4236,7 @@ int ath11k_peer_rx_frag_setup(struct ath
  
  	spin_lock_bh(&ab->base_lock);
  
@@ -532,7 +531,7 @@
  	if (!peer) {
  		ath11k_warn(ab, "failed to find the peer to set up fragment info\n");
  		spin_unlock_bh(&ab->base_lock);
-@@ -4649,7 +4665,7 @@ static int ath11k_dp_rx_frag_h_mpdu(stru
+@@ -4682,7 +4698,7 @@ static int ath11k_dp_rx_frag_h_mpdu(stru
  		return -EINVAL;
  
  	spin_lock_bh(&ab->base_lock);
@@ -541,7 +540,7 @@
  	if (!peer) {
  		ath11k_warn(ab, "failed to find the peer to de-fragment received fragment peer_id %d\n",
  			    peer_id);
-@@ -4711,7 +4727,7 @@ static int ath11k_dp_rx_frag_h_mpdu(stru
+@@ -4744,7 +4760,7 @@ static int ath11k_dp_rx_frag_h_mpdu(stru
  	timer_delete_sync(&rx_tid->frag_timer);
  	spin_lock_bh(&ab->base_lock);
  
@@ -550,7 +549,7 @@
  	if (!peer)
  		goto err_frags_cleanup;
  
-@@ -6401,7 +6417,7 @@ int ath11k_dp_rx_process_mon_status(stru
+@@ -6424,7 +6440,7 @@ int ath11k_dp_rx_process_mon_status(stru
  			trace_ath11k_htt_rxdesc(ar, skb->data, log_type, rx_buf_sz);
  
  		ppdu_info->peer_id = HAL_INVALID_PEERID;
@@ -559,7 +558,7 @@
  
  		if (test_bit(ATH11K_FLAG_MONITOR_STARTED, &ar->monitor_flags) &&
  		    pmon->mon_ppdu_status == DP_PPDU_STATUS_START &&
-@@ -6436,7 +6452,7 @@ int ath11k_dp_rx_process_mon_status(stru
+@@ -6459,7 +6475,7 @@ int ath11k_dp_rx_process_mon_status(stru
  
  		rcu_read_lock();
  		spin_lock_bh(&ab->base_lock);
@@ -638,21 +637,19 @@
  		struct hal_rx_phyrx_rssi_legacy_info *rssi =
  			(struct hal_rx_phyrx_rssi_legacy_info *)tlv_data;
  		u32 reception_type = 0;
-@@ -1542,11 +1541,11 @@ ath11k_hal_rx_parse_mon_status_tlv(struc
+@@ -1541,9 +1540,9 @@ ath11k_hal_rx_parse_mon_status_tlv(struc
+ 		struct hal_rx_mpdu_info *mpdu_info =
  				(struct hal_rx_mpdu_info *)tlv_data;
- 		u16 peer_id;
  
--		peer_id = ath11k_hal_rx_mpduinfo_get_peerid(ab, mpdu_info);
-+		peer_id = ath11k_hal_rx_mpduinfo_get_peerid(ar->ab, mpdu_info);
- 		if (peer_id)
- 			ppdu_info->peer_id = peer_id;
+-		ppdu_info->peer_id = ath11k_hal_rx_mpduinfo_get_peerid(ab, mpdu_info);
++		ppdu_info->peer_id = ath11k_hal_rx_mpduinfo_get_peerid(ar->ab, mpdu_info);
  
 -		ppdu_info->mpdu_len += ab->hw_params.hw_ops->rx_desc_get_hal_mpdu_len(mpdu_info);
 +		ppdu_info->mpdu_len += ar->ab->hw_params.hw_ops->rx_desc_get_hal_mpdu_len(mpdu_info);
  
  		break;
  	}
-@@ -1574,7 +1573,7 @@ ath11k_hal_rx_parse_mon_status_tlv(struc
+@@ -1571,7 +1570,7 @@ ath11k_hal_rx_parse_mon_status_tlv(struc
  }
  
  enum hal_rx_mon_status
@@ -661,7 +658,7 @@
  			       struct hal_rx_mon_ppdu_info *ppdu_info,
  			       struct sk_buff *skb)
  {
-@@ -1600,7 +1599,7 @@ ath11k_hal_rx_parse_mon_status(struct at
+@@ -1597,7 +1596,7 @@ ath11k_hal_rx_parse_mon_status(struct at
  		if (tlv_tag == HAL_RX_PPDU_END)
  			tlv_len = sizeof(struct hal_rx_rxpcu_classification_overview);
  
@@ -692,7 +689,7 @@
  				   struct ath11k_vif *ap_vlan_arvif,
  				   struct ieee80211_sta *sta);
  
-@@ -912,16 +912,16 @@ void ath11k_mac_peer_cleanup_all(struct
+@@ -928,17 +928,17 @@ void ath11k_mac_peer_cleanup_all(struct
  
  	lockdep_assert_held(&ar->conf_mutex);
  
@@ -704,6 +701,7 @@
  		ath11k_peer_rx_tid_cleanup(ar, peer);
 -		ath11k_peer_rhash_delete(ab, peer);
 +		ath11k_peer_rhash_delete(ar, peer);
+ 		ath11k_mac_station_cleanup(peer->sta);
  		list_del(&peer->list);
  		kfree(peer);
  	}
@@ -713,7 +711,7 @@
  
  	ar->num_peers = 0;
  	ar->num_stations = 0;
-@@ -3218,7 +3218,7 @@ static void ath11k_bss_assoc(struct ieee
+@@ -3241,7 +3241,7 @@ static void ath11k_bss_assoc(struct ieee
  
  	spin_lock_bh(&ar->ab->base_lock);
  
@@ -722,7 +720,7 @@
  	if (peer && peer->is_authorized)
  		is_auth = true;
  
-@@ -4380,7 +4380,7 @@ static int ath11k_clear_peer_keys(struct
+@@ -4403,7 +4403,7 @@ static int ath11k_clear_peer_keys(struct
  	lockdep_assert_held(&ar->conf_mutex);
  
  	spin_lock_bh(&ab->base_lock);
@@ -731,7 +729,7 @@
  	if (!peer) {
  		spin_unlock_bh(&ab->base_lock);
  		return -ENOENT;
-@@ -4418,7 +4418,7 @@ static int ath11k_set_group_keys(struct
+@@ -4441,7 +4441,7 @@ static int ath11k_set_group_keys(struct
  	struct ath11k_peer *peer;
  
  	spin_lock_bh(&ab->base_lock);
@@ -740,7 +738,7 @@
  	spin_unlock_bh(&ab->base_lock);
  
  	if (!peer)
-@@ -4531,7 +4531,7 @@ static int ath11k_mac_op_set_key(struct
+@@ -4554,7 +4554,7 @@ static int ath11k_mac_op_set_key(struct
  	 * we already hold conf_mutex. we just make sure its there now.
  	 */
  	spin_lock_bh(&ab->base_lock);
@@ -749,7 +747,7 @@
  
  	/* flush the fragments cache during key (re)install to
  	 * ensure all frags in the new frag list belong to the same key.
-@@ -4681,7 +4681,7 @@ static int ath11k_mac_op_set_key(struct
+@@ -4704,7 +4704,7 @@ static int ath11k_mac_op_set_key(struct
  	}
  
  	spin_lock_bh(&ab->base_lock);
@@ -758,7 +756,7 @@
  
  	/* TODO: Check if vdev specific security cfg is mandatory */
  	ret = ath11k_nss_vdev_set_cmd(arvif, ATH11K_NSS_WIFI_VDEV_SECURITY_TYPE_CMD, key->cipher);
-@@ -4712,7 +4712,7 @@ static int ath11k_mac_op_set_key(struct
+@@ -4735,7 +4735,7 @@ static int ath11k_mac_op_set_key(struct
  		list_for_each_entry_safe(dyn_vlan_cfg, tmp, &ap_vlan_arvif->dyn_vlan_cfg, cfg_list) {
  			struct ieee80211_sta *vlan_sta = dyn_vlan_cfg->sta;
  
@@ -767,7 +765,7 @@
  			if (ret)
  				ath11k_warn(ar->ab, "failed to cfg dyn vlan for peer %pM: %d\n",
  					    vlan_sta->addr, ret);
-@@ -5322,7 +5322,7 @@ static void ath11k_sta_set_4addr_wk(stru
+@@ -5345,7 +5345,7 @@ static void ath11k_sta_set_4addr_wk(stru
  	vif = ap_vlan_arvif->vif;
  
  	spin_lock_bh(&ab->base_lock);
@@ -776,7 +774,7 @@
  	if (!wds_peer) {
  		spin_unlock_bh(&ab->base_lock);
  		ath11k_warn(ab, "mac sta use 4addr failed to find peer %pM\n",
-@@ -5548,7 +5548,7 @@ static void ath11k_mac_op_sta_rc_update(
+@@ -5571,7 +5571,7 @@ static void ath11k_mac_op_sta_rc_update(
  
  	spin_lock_bh(&ar->ab->base_lock);
  
@@ -785,7 +783,7 @@
  	if (!peer) {
  		spin_unlock_bh(&ar->ab->base_lock);
  		ath11k_warn(ar->ab, "mac sta rc update failed to find peer %pM on vdev %i\n",
-@@ -8634,7 +8634,7 @@ ath11k_mac_op_assign_vif_chanctx(struct
+@@ -8657,7 +8657,7 @@ ath11k_mac_op_assign_vif_chanctx(struct
  	if (ab->hw_params.vdev_start_delay &&
  	    arvif->vdev_type != WMI_VDEV_TYPE_AP &&
  	    arvif->vdev_type != WMI_VDEV_TYPE_MONITOR &&
@@ -794,7 +792,7 @@
  		memcpy(&arvif->chanctx, ctx, sizeof(*ctx));
  		ret = 0;
  		goto out;
-@@ -8710,7 +8710,7 @@ ath11k_mac_op_unassign_vif_chanctx(struc
+@@ -8733,7 +8733,7 @@ ath11k_mac_op_unassign_vif_chanctx(struc
  	if (ab->hw_params.vdev_start_delay &&
  	    arvif->vdev_type == WMI_VDEV_TYPE_MONITOR) {
  		spin_lock_bh(&ab->base_lock);
@@ -803,7 +801,7 @@
  		spin_unlock_bh(&ab->base_lock);
  		if (peer)
  			ath11k_peer_delete(ar, arvif->vdev_id, ar->mac_addr);
-@@ -9303,7 +9303,7 @@ ath11k_mac_validate_vht_he_fixed_rate_se
+@@ -9326,7 +9326,7 @@ ath11k_mac_validate_vht_he_fixed_rate_se
  
  	rcu_read_lock();
  	spin_lock_bh(&ar->ab->base_lock);
@@ -812,7 +810,7 @@
  		if (peer->sta) {
  			deflink = &peer->sta->deflink;
  
-@@ -10314,26 +10314,26 @@ static int ath11k_mac_station_remove(str
+@@ -10331,26 +10331,26 @@ static int ath11k_mac_station_remove(str
  	return ret;
  }
  
@@ -846,7 +844,7 @@
  			    sta->addr, ret);
  		return ret;
  	}
-@@ -10383,20 +10383,20 @@ static int ath11k_mac_op_sta_state(struc
+@@ -10400,20 +10400,20 @@ static int ath11k_mac_op_sta_state(struc
  			ath11k_warn(ar->ab, "Failed to remove station: %pM for VDEV: %d\n",
  				    sta->addr, arvif->vdev_id);
  
@@ -871,7 +869,7 @@
  	} else if (old_state == IEEE80211_STA_AUTH &&
  		   new_state == IEEE80211_STA_ASSOC &&
  		   (vif->type == NL80211_IFTYPE_AP ||
-@@ -10427,7 +10427,7 @@ static int ath11k_mac_op_sta_state(struc
+@@ -10444,7 +10444,7 @@ static int ath11k_mac_op_sta_state(struc
  		   new_state == IEEE80211_STA_AUTHORIZED) {
  		spin_lock_bh(&ar->ab->base_lock);
  
@@ -880,7 +878,7 @@
  		if (peer)
  			peer->is_authorized = true;
  
-@@ -10464,7 +10464,7 @@ static int ath11k_mac_op_sta_state(struc
+@@ -10481,7 +10481,7 @@ static int ath11k_mac_op_sta_state(struc
  					list_add_tail(&ar_dyn_vlan_cfg->cfg_list, &arvif->dyn_vlan_cfg);
  				}
  			} else {
@@ -889,7 +887,7 @@
  				if (ret)
  					ath11k_warn(ar->ab, "failed to cfg dyn vlan for peer %pM: %d\n",
  						    sta->addr, ret);
-@@ -10497,7 +10497,7 @@ static int ath11k_mac_op_sta_state(struc
+@@ -10514,7 +10514,7 @@ static int ath11k_mac_op_sta_state(struc
  		   new_state == IEEE80211_STA_ASSOC) {
  
  		spin_lock_bh(&ar->ab->base_lock);
@@ -898,7 +896,7 @@
  		if (peer)
  			peer->is_authorized = false;
  		spin_unlock_bh(&ar->ab->base_lock);
-@@ -10505,7 +10505,7 @@ static int ath11k_mac_op_sta_state(struc
+@@ -10522,7 +10522,7 @@ static int ath11k_mac_op_sta_state(struc
  		   new_state == IEEE80211_STA_ASSOC) {
  		spin_lock_bh(&ar->ab->base_lock);
  
@@ -907,7 +905,7 @@
  		if (peer)
  			peer->is_authorized = false;
  
-@@ -10921,9 +10921,9 @@ void ath11k_mac_unregister(struct ath11k
+@@ -10938,9 +10938,9 @@ void ath11k_mac_unregister(struct ath11k
  			continue;
  
  		__ath11k_mac_unregister(ar);
@@ -918,7 +916,7 @@
  }
  
  static int __ath11k_mac_register(struct ath11k *ar)
-@@ -11207,15 +11207,15 @@ int ath11k_mac_register(struct ath11k_ba
+@@ -11224,15 +11224,15 @@ int ath11k_mac_register(struct ath11k_ba
  	ab->cc_freq_hz = IPQ8074_CC_FREQ_HERTZ;
  	ab->free_vdev_map = (1LL << (ab->num_radios * TARGET_NUM_VDEVS(ab))) - 1;
  
@@ -937,7 +935,7 @@
  		if (ab->pdevs_macaddr_valid) {
  			ether_addr_copy(ar->mac_addr, pdev->mac_addr);
  		} else {
-@@ -11243,9 +11243,9 @@ err_cleanup:
+@@ -11260,9 +11260,9 @@ err_cleanup:
  		pdev = &ab->pdevs[i];
  		ar = pdev->ar;
  		__ath11k_mac_unregister(ar);
@@ -948,7 +946,7 @@
  
  	return ret;
  }
-@@ -11289,9 +11289,12 @@ int ath11k_mac_allocate(struct ath11k_ba
+@@ -11306,9 +11306,12 @@ int ath11k_mac_allocate(struct ath11k_ba
  		ar->num_rx_chains = get_num_chains(pdev->cap.rx_chain_mask);
  
  		pdev->ar = ar;
@@ -2418,7 +2416,7 @@
  {
 --- a/drivers/net/wireless/ath/ath11k/wmi.c
 +++ b/drivers/net/wireless/ath/ath11k/wmi.c
-@@ -7636,10 +7636,12 @@ static void ath11k_wmi_event_peer_sta_ps
+@@ -7648,10 +7648,12 @@ static void ath11k_wmi_event_peer_sta_ps
  	struct ieee80211_sta *sta;
  	struct ath11k_peer *peer;
  	struct ath11k *ar;
@@ -2431,7 +2429,7 @@
  
  	tb = ath11k_wmi_tlv_parse_alloc(ab, skb, GFP_ATOMIC);
  	if (IS_ERR(tb)) {
-@@ -7663,69 +7665,65 @@ static void ath11k_wmi_event_peer_sta_ps
+@@ -7675,69 +7677,65 @@ static void ath11k_wmi_event_peer_sta_ps
  
  	rcu_read_lock();
  
@@ -2543,7 +2541,7 @@
  	rcu_read_unlock();
  	kfree(tb);
  }
-@@ -7840,9 +7838,9 @@ static void ath11k_mgmt_rx_event(struct
+@@ -7852,9 +7850,9 @@ static void ath11k_mgmt_rx_event(struct
  
  	spin_lock_bh(&ab->base_lock);
  
@@ -2555,7 +2553,7 @@
  	if (!peer) {
  		spin_unlock_bh(&ab->base_lock);
  		goto skip_mgmt_stats;
-@@ -8071,8 +8069,10 @@ static void ath11k_peer_sta_kickout_even
+@@ -8083,8 +8081,10 @@ static void ath11k_peer_sta_kickout_even
  	struct wmi_peer_sta_kickout_arg arg = {};
  	struct ieee80211_sta *sta;
  	struct ath11k_peer *peer;
@@ -2567,7 +2565,7 @@
  
  	if (ath11k_pull_peer_sta_kickout_ev(ab, skb, &arg) != 0) {
  		ath11k_warn(ab, "failed to extract peer sta kickout event");
-@@ -8083,40 +8083,30 @@ static void ath11k_peer_sta_kickout_even
+@@ -8095,40 +8095,30 @@ static void ath11k_peer_sta_kickout_even
  
  	spin_lock_bh(&ab->base_lock);
  
